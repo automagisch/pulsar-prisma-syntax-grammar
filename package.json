@@ -1,6 +1,6 @@
 {
   "name": "language-prisma-schema",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Prisma schema (.prisma) syntax highlighting and snippets for Pulsar",
   "repository": "https://github.com/automagisch/pulsar-prisma-syntax-grammar",
   "keywords": [
