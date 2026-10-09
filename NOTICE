@@ -1,4 +1,4 @@
-language-prisma
+language-prisma-schema
 Prisma schema syntax highlighting for Pulsar.
 
 This product includes a grammar derived from the TextMate grammar in the
