@@ -1,0 +1,412 @@
+# Prisma schema grammar for Pulsar.
+#
+# Based on the TextMate grammar of the official Prisma VS Code extension
+# (https://github.com/prisma/language-tools, packages/vscode/syntaxes/
+# prisma.tmLanguage.json), licensed under Apache-2.0. Converted to CSON and
+# extended with more precise, theme-friendly scope names.
+
+name: 'Prisma'
+scopeName: 'source.prisma'
+fileTypes: [
+  'prisma'
+]
+patterns: [
+  { include: '#comments' }
+  { include: '#model_block' }
+  { include: '#enum_block' }
+  { include: '#config_block' }
+  { include: '#types_block' }
+  { include: '#type_alias' }
+]
+
+repository:
+
+  # ---------------------------------------------------------------- comments
+
+  comments:
+    patterns: [
+      { include: '#doc_comment' }
+      { include: '#line_comment' }
+      { include: '#block_comment' }
+    ]
+
+  doc_comment:
+    name: 'comment.line.documentation.prisma'
+    begin: '///'
+    beginCaptures:
+      '0': name: 'punctuation.definition.comment.prisma'
+    end: '$'
+
+  line_comment:
+    name: 'comment.line.double-slash.prisma'
+    begin: '//'
+    beginCaptures:
+      '0': name: 'punctuation.definition.comment.prisma'
+    end: '$'
+
+  block_comment:
+    name: 'comment.block.prisma'
+    begin: '/\\*'
+    beginCaptures:
+      '0': name: 'punctuation.definition.comment.begin.prisma'
+    end: '\\*/'
+    endCaptures:
+      '0': name: 'punctuation.definition.comment.end.prisma'
+
+  # ------------------------------------------------------------------ blocks
+
+  # model / view / type (composite type) blocks
+  model_block:
+    name: 'meta.block.model.prisma'
+    begin: '^\\s*(model|view|type)\\s+([A-Za-z_][\\w]*)\\s*(\\{)'
+    beginCaptures:
+      '1': name: 'storage.type.block.prisma'
+      '2': name: 'entity.name.type.block.prisma'
+      '3': name: 'punctuation.section.block.begin.prisma'
+    end: '\\}'
+    endCaptures:
+      '0': name: 'punctuation.section.block.end.prisma'
+    patterns: [
+      { include: '#comments' }
+      { include: '#block_attribute' }
+      { include: '#unsupported_field' }
+      { include: '#field_definition' }
+      { include: '#field_attribute' }
+    ]
+
+  enum_block:
+    name: 'meta.block.enum.prisma'
+    begin: '^\\s*(enum)\\s+([A-Za-z_][\\w]*)\\s*(\\{)'
+    beginCaptures:
+      '1': name: 'storage.type.block.prisma'
+      '2': name: 'entity.name.type.block.prisma'
+      '3': name: 'punctuation.section.block.begin.prisma'
+    end: '\\}'
+    endCaptures:
+      '0': name: 'punctuation.section.block.end.prisma'
+    patterns: [
+      { include: '#comments' }
+      { include: '#block_attribute' }
+      {
+        match: '^\\s*([A-Za-z_][\\w]*)\\b'
+        captures:
+          '1': name: 'constant.other.enum-member.prisma'
+      }
+      { include: '#field_attribute' }
+    ]
+
+  # datasource / generator blocks with key = value pairs
+  config_block:
+    name: 'meta.block.config.prisma'
+    begin: '^\\s*(datasource|generator)\\s+([A-Za-z_][\\w]*)\\s*(\\{)'
+    beginCaptures:
+      '1': name: 'storage.type.block.prisma'
+      '2': name: 'entity.name.type.block.prisma'
+      '3': name: 'punctuation.section.block.begin.prisma'
+    end: '\\}'
+    endCaptures:
+      '0': name: 'punctuation.section.block.end.prisma'
+    patterns: [
+      { include: '#comments' }
+      { include: '#assignment' }
+    ]
+
+  assignment:
+    name: 'meta.assignment.prisma'
+    begin: '^\\s*([A-Za-z_][\\w]*)\\s*(=)'
+    beginCaptures:
+      '1': name: 'variable.other.property.prisma'
+      '2': name: 'keyword.operator.assignment.prisma'
+    end: '(?=\\})|$'
+    patterns: [
+      { include: '#comments' }
+      { include: '#value' }
+    ]
+
+  # `types { ... }` block (preview feature) with `Alias = String @db.Text`
+  types_block:
+    name: 'meta.block.types.prisma'
+    begin: '^\\s*(types)\\s*(\\{)'
+    beginCaptures:
+      '1': name: 'storage.type.block.prisma'
+      '2': name: 'punctuation.section.block.begin.prisma'
+    end: '\\}'
+    endCaptures:
+      '0': name: 'punctuation.section.block.end.prisma'
+    patterns: [
+      { include: '#comments' }
+      {
+        name: 'meta.type-alias.prisma'
+        begin: '^\\s*([A-Za-z_][\\w]*)\\s*(=)'
+        beginCaptures:
+          '1': name: 'entity.name.type.alias.prisma'
+          '2': name: 'keyword.operator.assignment.prisma'
+        end: '$'
+        patterns: [
+          { include: '#comments' }
+          { include: '#field_attribute' }
+          { include: '#type_reference' }
+        ]
+      }
+    ]
+
+  # top-level `type Alias = String @db.Text`
+  type_alias:
+    name: 'meta.type-alias.prisma'
+    begin: '^\\s*(type)\\s+([A-Za-z_][\\w]*)\\s*(=)'
+    beginCaptures:
+      '1': name: 'storage.type.block.prisma'
+      '2': name: 'entity.name.type.alias.prisma'
+      '3': name: 'keyword.operator.assignment.prisma'
+    end: '$'
+    patterns: [
+      { include: '#comments' }
+      { include: '#field_attribute' }
+      { include: '#type_reference' }
+    ]
+
+  # ------------------------------------------------------------------ fields
+
+  # `location Unsupported("geometry(Point, 4326)")?`
+  unsupported_field:
+    name: 'meta.field.prisma'
+    begin: '^\\s*([A-Za-z_][\\w]*)\\s+(Unsupported)\\s*(\\()'
+    beginCaptures:
+      '1': name: 'variable.other.field.prisma'
+      '2': name: 'support.type.primitive.unsupported.prisma'
+      '3': name: 'punctuation.definition.arguments.begin.prisma'
+    end: '(\\))(\\[\\])?(\\?)?'
+    endCaptures:
+      '1': name: 'punctuation.definition.arguments.end.prisma'
+      '2': name: 'keyword.operator.type.list.prisma'
+      '3': name: 'keyword.operator.type.optional.prisma'
+    patterns: [
+      { include: '#string' }
+    ]
+
+  # `posts Post[]`, `email String? @unique`
+  field_definition:
+    match: '^\\s*([A-Za-z_][\\w]*)\\s*(:)?\\s+(?:\\b(String|Boolean|Int|BigInt|Float|Decimal|DateTime|Json|Bytes)\\b|([A-Za-z_][\\w]*))(\\[\\])?(\\?)?(!)?'
+    captures:
+      '1': name: 'variable.other.field.prisma'
+      '2': name: 'invalid.illegal.colon.prisma'
+      '3': name: 'support.type.primitive.prisma'
+      '4': name: 'entity.name.type.reference.prisma'
+      '5': name: 'keyword.operator.type.list.prisma'
+      '6': name: 'keyword.operator.type.optional.prisma'
+      '7': name: 'invalid.illegal.required.prisma'
+
+  type_reference:
+    patterns: [
+      {
+        match: '\\b(String|Boolean|Int|BigInt|Float|Decimal|DateTime|Json|Bytes|Unsupported)\\b'
+        name: 'support.type.primitive.prisma'
+      }
+      {
+        match: '\\b[A-Za-z_][\\w]*\\b'
+        name: 'entity.name.type.reference.prisma'
+      }
+      {
+        match: '\\[\\]'
+        name: 'keyword.operator.type.list.prisma'
+      }
+      {
+        match: '\\?'
+        name: 'keyword.operator.type.optional.prisma'
+      }
+    ]
+
+  # -------------------------------------------------------------- attributes
+
+  # @@index([...]), @@map("..."), @@ignore
+  block_attribute:
+    patterns: [
+      {
+        name: 'meta.attribute.block.prisma'
+        begin: '(@@)([A-Za-z_][\\w]*)(?:(\\.)([A-Za-z_][\\w]*))?\\s*(\\()'
+        beginCaptures:
+          '1': name: 'punctuation.definition.attribute.prisma'
+          '2': name: 'entity.name.function.attribute.block.prisma'
+          '3': name: 'punctuation.accessor.prisma'
+          '4': name: 'entity.name.function.attribute.block.prisma'
+          '5': name: 'punctuation.definition.arguments.begin.prisma'
+        end: '\\)'
+        endCaptures:
+          '0': name: 'punctuation.definition.arguments.end.prisma'
+        patterns: [
+          { include: '#arguments' }
+        ]
+      }
+      {
+        name: 'meta.attribute.block.prisma'
+        match: '(@@)([A-Za-z_][\\w]*)(?:(\\.)([A-Za-z_][\\w]*))?'
+        captures:
+          '1': name: 'punctuation.definition.attribute.prisma'
+          '2': name: 'entity.name.function.attribute.block.prisma'
+          '3': name: 'punctuation.accessor.prisma'
+          '4': name: 'entity.name.function.attribute.block.prisma'
+      }
+    ]
+
+  # @id, @default(...), @relation(...), @db.VarChar(255)
+  field_attribute:
+    patterns: [
+      { include: '#block_attribute' }
+      {
+        # namespaced native type attribute: @db.VarChar(255)
+        name: 'meta.attribute.native-type.prisma'
+        begin: '(@)([A-Za-z_][\\w]*)(\\.)([A-Za-z_][\\w]*)\\s*(\\()'
+        beginCaptures:
+          '1': name: 'punctuation.definition.attribute.prisma'
+          '2': name: 'entity.name.namespace.prisma'
+          '3': name: 'punctuation.accessor.prisma'
+          '4': name: 'entity.name.function.attribute.native-type.prisma'
+          '5': name: 'punctuation.definition.arguments.begin.prisma'
+        end: '\\)'
+        endCaptures:
+          '0': name: 'punctuation.definition.arguments.end.prisma'
+        patterns: [
+          { include: '#arguments' }
+        ]
+      }
+      {
+        name: 'meta.attribute.native-type.prisma'
+        match: '(@)([A-Za-z_][\\w]*)(\\.)([A-Za-z_][\\w]*)'
+        captures:
+          '1': name: 'punctuation.definition.attribute.prisma'
+          '2': name: 'entity.name.namespace.prisma'
+          '3': name: 'punctuation.accessor.prisma'
+          '4': name: 'entity.name.function.attribute.native-type.prisma'
+      }
+      {
+        name: 'meta.attribute.field.prisma'
+        begin: '(@)([A-Za-z_][\\w]*)\\s*(\\()'
+        beginCaptures:
+          '1': name: 'punctuation.definition.attribute.prisma'
+          '2': name: 'entity.name.function.attribute.prisma'
+          '3': name: 'punctuation.definition.arguments.begin.prisma'
+        end: '\\)'
+        endCaptures:
+          '0': name: 'punctuation.definition.arguments.end.prisma'
+        patterns: [
+          { include: '#arguments' }
+        ]
+      }
+      {
+        name: 'meta.attribute.field.prisma'
+        match: '(@)([A-Za-z_][\\w]*)'
+        captures:
+          '1': name: 'punctuation.definition.attribute.prisma'
+          '2': name: 'entity.name.function.attribute.prisma'
+      }
+    ]
+
+  # ------------------------------------------------------- arguments / values
+
+  arguments:
+    patterns: [
+      { include: '#comments' }
+      { include: '#named_argument' }
+      { include: '#value' }
+      {
+        match: ','
+        name: 'punctuation.separator.arguments.prisma'
+      }
+    ]
+
+  named_argument:
+    match: '\\b([A-Za-z_][\\w]*)\\s*(:)'
+    captures:
+      '1': name: 'variable.parameter.prisma'
+      '2': name: 'punctuation.separator.key-value.prisma'
+
+  value:
+    patterns: [
+      { include: '#array' }
+      { include: '#function_call' }
+      { include: '#string' }
+      { include: '#number' }
+      { include: '#constant' }
+      { include: '#identifier' }
+    ]
+
+  array:
+    name: 'meta.array.prisma'
+    begin: '\\['
+    beginCaptures:
+      '0': name: 'punctuation.definition.array.begin.prisma'
+    end: '\\]'
+    endCaptures:
+      '0': name: 'punctuation.definition.array.end.prisma'
+    patterns: [
+      { include: '#comments' }
+      { include: '#value' }
+      {
+        match: ','
+        name: 'punctuation.separator.array.prisma'
+      }
+    ]
+
+  # env("X"), autoincrement(), now(), uuid(4), dbgenerated("..."), title(sort: Desc)
+  function_call:
+    name: 'meta.function-call.prisma'
+    begin: '\\b(?:(env|autoincrement|now|uuid|cuid|ulid|nanoid|dbgenerated|sequence|auto)|([A-Za-z_][\\w]*))\\s*(\\()'
+    beginCaptures:
+      '1': name: 'support.function.builtin.prisma'
+      '2': name: 'entity.name.function.prisma'
+      '3': name: 'punctuation.definition.arguments.begin.prisma'
+    end: '\\)'
+    endCaptures:
+      '0': name: 'punctuation.definition.arguments.end.prisma'
+    patterns: [
+      { include: '#arguments' }
+    ]
+
+  string:
+    name: 'string.quoted.double.prisma'
+    begin: '"'
+    beginCaptures:
+      '0': name: 'punctuation.definition.string.begin.prisma'
+    end: '"|$'
+    endCaptures:
+      '0': name: 'punctuation.definition.string.end.prisma'
+    patterns: [
+      {
+        match: '\\\\(?:["\\\\/bfnrt]|u[0-9A-Fa-f]{4})'
+        name: 'constant.character.escape.prisma'
+      }
+      {
+        match: '\\\\.'
+        name: 'invalid.illegal.unrecognized-string-escape.prisma'
+      }
+    ]
+
+  number:
+    match: '(?<![\\w.])-?(?:0[xX][0-9A-Fa-f]+|[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\\b'
+    name: 'constant.numeric.prisma'
+
+  constant:
+    patterns: [
+      {
+        match: '\\b(true|false)\\b'
+        name: 'constant.language.boolean.prisma'
+      }
+      {
+        match: '\\bnull\\b'
+        name: 'constant.language.null.prisma'
+      }
+      {
+        # referential actions
+        match: '\\b(Cascade|Restrict|NoAction|SetNull|SetDefault)\\b'
+        name: 'constant.language.referential-action.prisma'
+      }
+      {
+        # sort order and index types
+        match: '\\b(Asc|Desc|Hash|BTree|Gist|Gin|SpGist|Brin)\\b'
+        name: 'constant.language.prisma'
+      }
+    ]
+
+  identifier:
+    match: '\\b[A-Za-z_][\\w]*\\b'
+    name: 'variable.other.constant.prisma'

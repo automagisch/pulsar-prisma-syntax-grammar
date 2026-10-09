@@ -1,0 +1,7 @@
+'.source.prisma':
+  'editor':
+    'commentStart': '// '
+    'increaseIndentPattern': '^.*\\{[^}"\']*$'
+    'decreaseIndentPattern': '^\\s*\\}'
+    'tabLength': 2
+    'softTabs': true

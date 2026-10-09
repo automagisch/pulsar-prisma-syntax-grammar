@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres", "multiSchema"]
+  binaryTargets   = ["native", "darwin-arm64"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL") // used for migrations
+  extensions = [pg_trgm, postgis(version: "3.3.2")]
+  schemas    = ["public", "auth"]
+}
+
+/// A registered user of the application.
+model User {
+  id        Int       @id @default(autoincrement())
+  publicId  String    @unique @default(uuid()) @db.Uuid
+  email     String    @unique @db.VarChar(255)
+  name      String?   @map("full_name")
+  nickname  String    @default("anon \"user\"\n")
+  role      Role      @default(USER)
+  isActive  Boolean   @default(true)
+  karma     Float     @default(-1.5)
+  balance   Decimal   @default(0.00) @db.Decimal(10, 2)
+  bigCount  BigInt    @default(9007199254740993)
+  avatar    Bytes?
+  settings  Json      @default("{}")
+  tags      String[]
+  posts     Post[]
+  profile   Profile?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([email, name])
+  @@map("users")
+  @@schema("auth")
+}
+
+model Profile {
+  id      String  @id @default(cuid())
+  bio     String? @db.Text
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  userId  Int     @unique
+
+  @@schema("public")
+}
+
+model Post {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug       String     @default(nanoid(12))
+  title      String
+  content    String?
+  published  Boolean    @default(false)
+  author     User?      @relation("PostAuthor", fields: [authorId], references: [id], map: "post_author_fk")
+  authorId   Int?
+  categories Category[]
+  position   Int        @default(sequence(start: 10, increment: 5))
+  location   Unsupported("geometry(Point, 4326)")?
+  legacy     String?    @ignore
+  addresses  Address[]
+
+  @@unique([authorId, slug], name: "author_slug")
+  @@index([title(sort: Desc), published], type: BTree)
+  @@fulltext([title, content])
+  @@schema("public")
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  posts Post[]
+
+  @@schema("public")
+}
+
+model LegacyTable {
+  code  String
+  value Json?
+
+  @@id([code])
+  @@ignore
+  @@schema("public")
+}
+
+/// A composite type (MongoDB)
+type Address {
+  street String
+  city   String
+  zip    String?
+}
+
+view UserStats {
+  userId    Int    @unique
+  postCount Int
+}
+
+/* Block comments are tolerated too */
+enum Role {
+  USER
+  ADMIN     @map("administrator")
+  MODERATOR // can moderate posts
+
+  @@map("roles")
+  @@schema("auth")
+}

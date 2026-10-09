@@ -1,0 +1,75 @@
+'.source.prisma':
+  'Model':
+    'prefix': 'model'
+    'description': 'Prisma model block with an autoincrement id'
+    'body': """
+      model ${1:Name} {
+        id Int @id @default(autoincrement())
+        $0
+      }
+    """
+
+  'Enum':
+    'prefix': 'enum'
+    'description': 'Prisma enum block'
+    'body': """
+      enum ${1:Name} {
+        ${2:VALUE}
+        $0
+      }
+    """
+
+  'Datasource (PostgreSQL)':
+    'prefix': 'datasource'
+    'description': 'PostgreSQL datasource using the DATABASE_URL env var'
+    'body': """
+      datasource ${1:db} {
+        provider = "${2:postgresql}"
+        url      = env("${3:DATABASE_URL}")
+      }
+    """
+
+  'Generator (Prisma Client JS)':
+    'prefix': 'generator'
+    'description': 'prisma-client-js generator block'
+    'body': """
+      generator ${1:client} {
+        provider = "${2:prisma-client-js}"
+      }
+    """
+
+  'Relation field':
+    'prefix': 'relation'
+    'description': 'Relation field plus its foreign key field'
+    'body': """
+      ${1:author}   ${2:User} @relation(fields: [${3:authorId}], references: [${4:id}], onDelete: ${5:Cascade})
+      ${3:authorId} ${6:Int}
+    """
+
+  'Id field (autoincrement)':
+    'prefix': 'id'
+    'description': 'Int primary key with autoincrement()'
+    'body': 'id Int @id @default(autoincrement())'
+
+  'Id field (uuid)':
+    'prefix': 'iduuid'
+    'description': 'String primary key with uuid()'
+    'body': 'id String @id @default(uuid())'
+
+  'Timestamps':
+    'prefix': 'timestamps'
+    'description': 'createdAt and updatedAt fields'
+    'body': """
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt
+    """
+
+  'Index':
+    'prefix': '@@index'
+    'description': 'Block-level index'
+    'body': '@@index([${1:field}])'
+
+  'Map':
+    'prefix': '@@map'
+    'description': 'Map model to a table name'
+    'body': '@@map("${1:table_name}")'

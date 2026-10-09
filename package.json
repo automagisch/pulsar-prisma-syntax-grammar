@@ -1,0 +1,15 @@
+{
+  "name": "language-prisma",
+  "version": "0.1.0",
+  "description": "Prisma schema (.prisma) syntax highlighting and snippets for Pulsar",
+  "keywords": [
+    "prisma",
+    "grammar",
+    "syntax",
+    "language"
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  }
+}

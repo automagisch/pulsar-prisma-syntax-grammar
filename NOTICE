@@ -1,0 +1,17 @@
+language-prisma
+Prisma schema syntax highlighting for Pulsar.
+
+This product includes a grammar derived from the TextMate grammar in the
+official Prisma language tools:
+
+  prisma/language-tools
+  https://github.com/prisma/language-tools
+  File: packages/vscode/syntaxes/prisma.tmLanguage.json
+  Copyright Prisma Data, Inc.
+  Licensed under the Apache License, Version 2.0
+
+Modifications: converted from JSON to CSON for Pulsar, restructured into
+scoped attribute/argument/value rules, and changed or extended scope names
+(comments, scalar types, model references, native-type attributes, named
+arguments, built-in functions, escapes, constants and enum members) so that
+standard Pulsar/Atom syntax themes color them.
